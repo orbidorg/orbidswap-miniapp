@@ -8,15 +8,13 @@ import { UserWalletPanel } from './UserWalletPanel'
 import { ThemeToggle } from './ThemeToggle'
 import { Spotlight, Magnetic } from './Spotlight'
 import { useMiniKit, WorldAppBadge } from './MiniKitDetector'
-import { MiniKit } from '@worldcoin/minikit-js'
 
 export function Header() {
-    const { isConnected } = useAccount()
-    const { connect, connectors } = useConnect()
-    const { isWorldApp } = useMiniKit()
+    const { isConnected: wagmiConnected } = useAccount()
+    const { connect: wagmiConnect, connectors } = useConnect()
+    const { isWorldApp, isConnected: minikitConnected, connect: minikitConnect, walletAddress } = useMiniKit()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
-    const [worldWalletAddress, setWorldWalletAddress] = useState<string | null>(null)
     const [isConnecting, setIsConnecting] = useState(false)
 
     useEffect(() => {
@@ -33,70 +31,22 @@ export function Header() {
         { name: 'Pool', href: '/pool' },
     ]
 
-    // MiniKit wallet auth for World App
-    const handleWorldAppConnect = async () => {
-        if (!MiniKit.isInstalled()) {
-            console.log('MiniKit not installed')
-            return
-        }
-
+    const handleConnect = async () => {
         setIsConnecting(true)
 
-        try {
-            // Get nonce from backend
-            const nonceRes = await fetch('/api/nonce')
-            const { nonce } = await nonceRes.json()
-
-            // Request wallet auth from World App
-            const { finalPayload } = await MiniKit.commandsAsync.walletAuth({
-                nonce,
-                expirationTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-                statement: 'Sign in to OrbIdSwap',
-            })
-
-            if (finalPayload.status === 'error') {
-                console.log('Wallet auth cancelled')
-                setIsConnecting(false)
-                return
+        if (isWorldApp) {
+            await minikitConnect()
+        } else {
+            const injectedConnector = connectors.find(c => c.id === 'injected') || connectors[0]
+            if (injectedConnector) {
+                wagmiConnect({ connector: injectedConnector })
             }
-
-            // Verify on backend
-            const verifyRes = await fetch('/api/complete-siwe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ payload: finalPayload, nonce }),
-            })
-
-            const result = await verifyRes.json()
-
-            if (result.success) {
-                setWorldWalletAddress(result.address)
-                console.log('Connected:', result.address)
-            }
-        } catch (error) {
-            console.error('Wallet auth error:', error)
         }
 
         setIsConnecting(false)
     }
 
-    // Regular wagmi connect for external browsers
-    const handleRegularConnect = () => {
-        const injectedConnector = connectors.find(c => c.id === 'injected') || connectors[0]
-        if (injectedConnector) {
-            connect({ connector: injectedConnector })
-        }
-    }
-
-    const handleConnect = () => {
-        if (isWorldApp) {
-            handleWorldAppConnect()
-        } else {
-            handleRegularConnect()
-        }
-    }
-
-    const isWalletConnected = isConnected || worldWalletAddress
+    const isWalletConnected = wagmiConnected || minikitConnected
 
     return (
         <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass border-b border-gray-200/50 dark:border-[#293249]/50 py-3' : 'bg-transparent py-5'}`}>
@@ -140,12 +90,12 @@ export function Header() {
                     </div>
 
                     {isWalletConnected ? (
-                        worldWalletAddress ? (
+                        walletAddress ? (
                             // World App wallet display
                             <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#131a2a] px-3 py-2 rounded-full">
                                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-500" />
                                 <span className="text-sm font-medium">
-                                    {worldWalletAddress.slice(0, 6)}...{worldWalletAddress.slice(-4)}
+                                    {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
                                 </span>
                             </div>
                         ) : (

@@ -1,18 +1,24 @@
 'use client'
 
 import { MiniKit } from '@worldcoin/minikit-js'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 
 interface MiniKitContextType {
     isInstalled: boolean
     isWorldApp: boolean
     walletAddress: string | null
+    isConnected: boolean
+    connect: () => Promise<void>
+    disconnect: () => void
 }
 
 const MiniKitContext = createContext<MiniKitContextType>({
     isInstalled: false,
     isWorldApp: false,
     walletAddress: null,
+    isConnected: false,
+    connect: async () => { },
+    disconnect: () => { },
 })
 
 export function useMiniKit() {
@@ -24,12 +30,10 @@ export function MiniKitDetector({ children }: { children: React.ReactNode }) {
     const [walletAddress, setWalletAddress] = useState<string | null>(null)
 
     useEffect(() => {
-        // Check immediately
         const checkMiniKit = () => {
             try {
                 const installed = MiniKit.isInstalled()
                 console.log('🔍 MiniKit.isInstalled():', installed)
-                console.log('🔍 window.MiniKit:', typeof window !== 'undefined' ? (window as any).MiniKit : 'undefined')
 
                 if (installed) {
                     console.log('🌍 Running inside World App!')
@@ -44,10 +48,8 @@ export function MiniKitDetector({ children }: { children: React.ReactNode }) {
             }
         }
 
-        // Check immediately
         const immediate = checkMiniKit()
 
-        // Also check after a short delay (MiniKit might inject late)
         if (!immediate) {
             const timeout = setTimeout(() => {
                 const delayed = checkMiniKit()
@@ -60,11 +62,59 @@ export function MiniKitDetector({ children }: { children: React.ReactNode }) {
         }
     }, [])
 
+    const connect = useCallback(async () => {
+        if (!MiniKit.isInstalled()) {
+            console.log('MiniKit not installed, cannot connect')
+            return
+        }
+
+        try {
+            // Get nonce from backend
+            const nonceRes = await fetch('/api/nonce')
+            const { nonce } = await nonceRes.json()
+
+            // Request wallet auth from World App
+            const { finalPayload } = await MiniKit.commandsAsync.walletAuth({
+                nonce,
+                expirationTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                statement: 'Sign in to OrbIdSwap',
+            })
+
+            if (finalPayload.status === 'error') {
+                console.log('Wallet auth cancelled')
+                return
+            }
+
+            // Verify on backend
+            const verifyRes = await fetch('/api/complete-siwe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payload: finalPayload, nonce }),
+            })
+
+            const result = await verifyRes.json()
+
+            if (result.success) {
+                setWalletAddress(result.address)
+                console.log('✅ Connected:', result.address)
+            }
+        } catch (error) {
+            console.error('Wallet auth error:', error)
+        }
+    }, [])
+
+    const disconnect = useCallback(() => {
+        setWalletAddress(null)
+    }, [])
+
     return (
         <MiniKitContext.Provider value={{
             isInstalled,
             isWorldApp: isInstalled,
             walletAddress,
+            isConnected: !!walletAddress,
+            connect,
+            disconnect,
         }}>
             {children}
         </MiniKitContext.Provider>

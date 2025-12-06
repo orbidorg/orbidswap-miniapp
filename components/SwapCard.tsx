@@ -10,15 +10,26 @@ import { TokenSelectorModal } from './TokenSelectorModal'
 import { SettingsModal } from './SettingsModal'
 import { useDebounce } from '../hooks/useDebounce'
 import { motion } from 'framer-motion'
+import { useMiniKit } from './MiniKitDetector'
+import { getTokenIcon } from '../config/tokenIcons'
 
 export function SwapCard() {
-    const { address, isConnected } = useAccount()
+    const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
     const { connect, connectors } = useConnect()
+    const { isWorldApp, isConnected: minikitConnected, connect: minikitConnect, walletAddress: minikitAddress } = useMiniKit()
 
-    const handleConnect = () => {
-        const injectedConnector = connectors.find(c => c.id === 'injected') || connectors[0]
-        if (injectedConnector) {
-            connect({ connector: injectedConnector })
+    // Use either wagmi or minikit address/connection
+    const address = minikitAddress || wagmiAddress
+    const isConnected = wagmiConnected || minikitConnected
+
+    const handleConnect = async () => {
+        if (isWorldApp) {
+            await minikitConnect()
+        } else {
+            const injectedConnector = connectors.find(c => c.id === 'injected') || connectors[0]
+            if (injectedConnector) {
+                connect({ connector: injectedConnector })
+            }
         }
     }
 
@@ -37,14 +48,14 @@ export function SwapCard() {
     const [buyToken, setBuyToken] = useState<null | { symbol: string, name: string, address: string }>(null)
 
     // ETH Balance
-    const { data: ethBalance } = useBalance({ address })
+    const { data: ethBalance } = useBalance({ address: address as `0x${string}` })
 
     // Sell Token Balance (ERC20)
     const { data: sellTokenBalance } = useReadContract({
         address: sellToken.address as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'balanceOf',
-        args: address ? [address] : undefined,
+        args: address ? [address as `0x${string}`] : undefined,
         query: {
             enabled: !!address && sellToken.symbol !== 'WLD',
         }
@@ -55,7 +66,7 @@ export function SwapCard() {
         address: buyToken?.address as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'balanceOf',
-        args: address ? [address] : undefined,
+        args: address ? [address as `0x${string}`] : undefined,
         query: {
             enabled: !!address && !!buyToken && buyToken.symbol !== 'WLD',
         }
@@ -119,7 +130,7 @@ export function SwapCard() {
         address: sellToken.address as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'allowance',
-        args: address ? [address, ROUTER_ADDRESS as `0x${string}`] : undefined,
+        args: address ? [address as `0x${string}`, ROUTER_ADDRESS as `0x${string}`] : undefined,
         query: {
             enabled: !!address && sellToken.symbol !== 'WLD',
         }
@@ -185,7 +196,7 @@ export function SwapCard() {
                 address: ROUTER_ADDRESS as `0x${string}`,
                 abi: ROUTER_ABI,
                 functionName: 'swapExactETHForTokens',
-                args: [amountOutMin, path, address, deadlineTimestamp],
+                args: [amountOutMin, path, address as `0x${string}`, deadlineTimestamp],
                 value: amountIn,
             })
         } else if (buyToken?.symbol === 'WLD') {
@@ -193,14 +204,14 @@ export function SwapCard() {
                 address: ROUTER_ADDRESS as `0x${string}`,
                 abi: ROUTER_ABI,
                 functionName: 'swapExactTokensForETH',
-                args: [amountIn, amountOutMin, path, address, deadlineTimestamp],
+                args: [amountIn, amountOutMin, path, address as `0x${string}`, deadlineTimestamp],
             })
         } else {
             writeContract({
                 address: ROUTER_ADDRESS as `0x${string}`,
                 abi: ROUTER_ABI,
                 functionName: 'swapExactTokensForTokens',
-                args: [amountIn, amountOutMin, path, address, deadlineTimestamp],
+                args: [amountIn, amountOutMin, path, address as `0x${string}`, deadlineTimestamp],
             })
         }
     }
