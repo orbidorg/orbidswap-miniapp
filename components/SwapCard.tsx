@@ -12,6 +12,7 @@ import { useDebounce } from '../hooks/useDebounce'
 import { motion } from 'framer-motion'
 import { useMiniKit } from './MiniKitDetector'
 import { TokenIcon } from './TokenIcon'
+import { useTokenPrices } from '../hooks/useTokenPrices'
 
 export function SwapCard() {
     const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
@@ -21,6 +22,8 @@ export function SwapCard() {
     // Use either wagmi or minikit address/connection
     const address = minikitAddress || wagmiAddress
     const isConnected = wagmiConnected || minikitConnected
+
+    const { getPrice } = useTokenPrices()
 
     const handleConnect = async () => {
         if (isWorldApp) {
@@ -44,7 +47,7 @@ export function SwapCard() {
     const [selectorMode, setSelectorMode] = useState<'sell' | 'buy'>('sell')
 
     // Tokens State
-    const [sellToken, setSellToken] = useState({ symbol: 'ETH', name: 'Ethereum', address: '0x0000000000000000000000000000000000000000' })
+    const [sellToken, setSellToken] = useState({ symbol: 'WLD', name: 'Worldcoin', address: '0x2cFc85d8E48F8EAB294be644d9E25C3030863003' })
     const [buyToken, setBuyToken] = useState<null | { symbol: string, name: string, address: string }>(null)
 
     // ETH Balance
@@ -334,7 +337,7 @@ export function SwapCard() {
                             </button>
                         </div>
                         <div className="flex justify-between mt-2">
-                            <span className="text-gray-500 dark:text-[#5d6785] text-sm">$0.00</span>
+                            <span className="text-gray-500 dark:text-[#5d6785] text-sm">${(parseFloat(sellAmount || '0') * getPrice(sellToken.symbol)).toFixed(2)}</span>
                             <span className="text-gray-500 dark:text-[#5d6785] text-sm">Balance: {parseFloat(getBalance(sellToken, ethBalance, sellTokenBalance)).toFixed(4)}</span>
                         </div>
                     </div>
@@ -392,7 +395,7 @@ export function SwapCard() {
                             )}
                         </div>
                         <div className="flex justify-between mt-2">
-                            <span className="text-gray-500 dark:text-[#5d6785] text-sm">$0.00</span>
+                            <span className="text-gray-500 dark:text-[#5d6785] text-sm">${(parseFloat(buyAmount || '0') * (buyToken ? getPrice(buyToken.symbol) : 0)).toFixed(2)}</span>
                             <span className="text-gray-500 dark:text-[#5d6785] text-sm">Balance: {parseFloat(getBalance(buyToken, ethBalance, buyTokenBalance)).toFixed(4)}</span>
                         </div>
                     </div>

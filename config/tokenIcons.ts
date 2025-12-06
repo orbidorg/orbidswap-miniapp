@@ -10,7 +10,8 @@ export const TOKEN_ICONS: Record<string, string> = {
     // Stablecoins
     USDC: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png',
     USDT: 'https://s2.coinmarketcap.com/static/img/coins/64x64/825.png',
-    DAI: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4943.png',
+    // DAI removed, sDAI uses DAI icon usually or we get sDAI specific
+    sDAI: 'https://s2.coinmarketcap.com/static/img/coins/64x64/25380.png', // sDAI icon
 
     // Major cryptos
     BTC: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1.png',
@@ -28,12 +29,7 @@ export const WORLD_CHAIN_TOKENS: Record<string, { symbol: string; name: string; 
         decimals: 18,
         icon: TOKEN_ICONS.WETH,
     },
-    '0x0000000000000000000000000000000000000000': {
-        symbol: 'ETH',
-        name: 'Ethereum',
-        decimals: 18,
-        icon: TOKEN_ICONS.ETH,
-    },
+
     '0x2cFc85d8E48F8EAB294be644d9E25C3030863003': {
         symbol: 'WLD',
         name: 'Worldcoin',
@@ -56,19 +52,7 @@ export const WORLD_CHAIN_TOKENS: Record<string, { symbol: string; name: string; 
         symbol: 'sDAI',
         name: 'Savings Dai',
         decimals: 18,
-        icon: TOKEN_ICONS.DAI,
-    },
-    '0x102d758f688a4C1C5a80b116bD945d4455460282': {
-        symbol: 'USDT',
-        name: 'Tether USD (Bridged)',
-        decimals: 6,
-        icon: TOKEN_ICONS.USDT,
-    },
-    '0x9A60565f305F8863BA48fe642fB55c81F0b3680d': {
-        symbol: 'MVP',
-        name: 'MVP Token',
-        decimals: 18,
-        icon: 'https://ethereum-optimism.github.io/data/MVP/logo.png',
+        icon: TOKEN_ICONS.sDAI,
     },
 }
 

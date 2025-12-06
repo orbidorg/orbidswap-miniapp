@@ -58,8 +58,20 @@ export function WorldIDVerify({ action, onSuccess, onError }: WorldIDVerifyProps
                 const successPayload = finalPayload as ISuccessResult
                 onSuccess?.(successPayload.nullifier_hash)
             } else {
-                setError('Already verified or invalid proof')
-                onError?.('Verification failed')
+                const errorCode = result.verifyRes?.code
+                if (errorCode === 'max_verifications_reached') {
+                    // Treat as success/verified
+                    setIsVerified(true)
+                    // We might not get the nullifier hash here if it failed, but we know they are verified.
+                    // If we need the hash for backend, we might be stuck, but for UI "Verified" state it's enough.
+                    // Usually we want to treat this as "User is verified". 
+                } else if (errorCode === 'invalid_proof') {
+                    setError('Invalid proof provided')
+                    onError?.('Invalid proof')
+                } else {
+                    setError(result.verifyRes?.detail || 'Verification failed')
+                    onError?.('Verification failed')
+                }
             }
         } catch (err) {
             setError('Verification failed')

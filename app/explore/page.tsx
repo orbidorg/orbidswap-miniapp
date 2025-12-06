@@ -8,10 +8,8 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { FiDroplet, FiArrowRight } from 'react-icons/fi'
 import Link from 'next/link'
-
-const MOCK_WLD_PRICE_USD = 3.50
-
 import { WORLD_CHAIN_TOKENS } from '../../config/tokenIcons'
+import { useTokenPrices } from '../../hooks/useTokenPrices'
 
 interface Pool {
     address: string
@@ -26,6 +24,7 @@ Object.values(WORLD_CHAIN_TOKENS).forEach(token => {
 })
 
 export default function Explore() {
+    const { getPrice } = useTokenPrices()
     const [pools, setPools] = useState<Pool[]>([])
 
     const { data: allPairsLength } = useReadContract({
@@ -108,25 +107,30 @@ export default function Explore() {
                 const reserve0Num = parseFloat(formatUnits(reserves[0], 18))
                 const reserve1Num = parseFloat(formatUnits(reserves[1], 18))
 
+                const token0Sym = symbolMap[token0.toLowerCase()] || 'UNK'
+                const token1Sym = symbolMap[token1.toLowerCase()] || 'UNK'
+                const price0 = getPrice(token0Sym)
+                const price1 = getPrice(token1Sym)
+
                 let tvlUsd = 0
-                if (token0.toLowerCase() === WETH_ADDRESS.toLowerCase()) {
-                    tvlUsd = reserve0Num * MOCK_WLD_PRICE_USD * 2
-                } else if (token1.toLowerCase() === WETH_ADDRESS.toLowerCase()) {
-                    tvlUsd = reserve1Num * MOCK_WLD_PRICE_USD * 2
-                } else {
-                    tvlUsd = (reserve0Num + reserve1Num) * 1.5
+                if (price0 > 0 && price1 > 0) {
+                    tvlUsd = (reserve0Num * price0) + (reserve1Num * price1)
+                } else if (price0 > 0) {
+                    tvlUsd = reserve0Num * price0 * 2
+                } else if (price1 > 0) {
+                    tvlUsd = reserve1Num * price1 * 2
                 }
 
                 loadedPools.push({
                     address: pairAddress,
-                    token0Symbol: symbolMap[token0.toLowerCase()] || token0.slice(0, 4),
-                    token1Symbol: symbolMap[token1.toLowerCase()] || token1.slice(0, 4),
+                    token0Symbol: token0Sym,
+                    token1Symbol: token1Sym,
                     tvlUsd,
                 })
             }
         }
         setPools(loadedPools)
-    }, [pairsData, pairAddresses, tokenSymbols, tokenAddresses])
+    }, [pairsData, pairAddresses, tokenSymbols, tokenAddresses, getPrice])
 
     const formatUsd = (value: number) => {
         if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`

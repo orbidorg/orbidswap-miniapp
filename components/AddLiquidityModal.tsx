@@ -18,7 +18,7 @@ interface AddLiquidityModalProps {
 
 export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
     const { address } = useAccount()
-    const [tokenA, setTokenA] = useState<any>({ symbol: 'ETH', name: 'Ethereum', address: '0x0000000000000000000000000000000000000000' })
+    const [tokenA, setTokenA] = useState<any>({ symbol: 'WLD', name: 'Worldcoin', address: '0x2cFc85d8E48F8EAB294be644d9E25C3030863003' })
     const [tokenB, setTokenB] = useState<any>(null)
     const [amountA, setAmountA] = useState('')
     const [amountB, setAmountB] = useState('')
@@ -62,7 +62,7 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
         address: tokenA?.address as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'allowance',
-        args: address ? [address, ROUTER_ADDRESS as `0x${string}`] : undefined,
+        args: address ? [address as `0x${string}`, ROUTER_ADDRESS as `0x${string}`] : undefined,
         query: { enabled: !!address && tokenA && tokenA.symbol !== 'ETH' }
     })
 
@@ -70,7 +70,7 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
         address: tokenB?.address as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'allowance',
-        args: address ? [address, ROUTER_ADDRESS as `0x${string}`] : undefined,
+        args: address ? [address as `0x${string}`, ROUTER_ADDRESS as `0x${string}`] : undefined,
         query: { enabled: !!address && tokenB && tokenB.symbol !== 'ETH' }
     })
 
@@ -117,7 +117,7 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
                     parsedAmountB,
                     0n, // Min amount B
                     0n, // Min amount ETH
-                    address!,
+                    address as `0x${string}`,
                     deadline
                 ],
                 value: parsedAmountA,
@@ -132,7 +132,7 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
                     parsedAmountA,
                     0n, // Min amount A
                     0n, // Min amount ETH
-                    address!,
+                    address as `0x${string}`,
                     deadline
                 ],
                 value: parsedAmountB,
@@ -149,7 +149,7 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
                     parsedAmountB,
                     0n,
                     0n,
-                    address!,
+                    address as `0x${string}`,
                     deadline
                 ],
             })
