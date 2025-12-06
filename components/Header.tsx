@@ -30,6 +30,8 @@ export function Header() {
         { name: 'Limit', href: '/limit' },
         { name: 'Explore', href: '/explore' },
         { name: 'Pool', href: '/pool' },
+        { name: 'Docs', href: '/docs' },
+        { name: 'Help', href: '/help' },
     ]
 
     const handleConnect = async () => {
