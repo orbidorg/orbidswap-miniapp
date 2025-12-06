@@ -11,7 +11,7 @@ export const TOKEN_ICONS: Record<string, string> = {
     USDC: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png',
     USDT: 'https://s2.coinmarketcap.com/static/img/coins/64x64/825.png',
     // DAI removed, sDAI uses DAI icon usually or we get sDAI specific
-    sDAI: 'https://s2.coinmarketcap.com/static/img/coins/64x64/25380.png', // sDAI icon
+    sDAI: 'https://s2.coinmarketcap.com/static/img/coins/64x64/28356.png', // sDAI icon
 
     // Major cryptos
     BTC: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1.png',

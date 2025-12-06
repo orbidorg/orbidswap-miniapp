@@ -118,13 +118,23 @@ export default function LandingPage() {
               <span className="text-xl font-bold font-mono">{allPairsLength?.toString() || '0'}</span>
             </div>
             <div className="h-8 w-px bg-gray-200 dark:bg-[#293249]" />
-            <div className="flex flex-col items-end">
-              <span className="text-xs text-gray-500 dark:text-[#5d6785] uppercase tracking-wider font-semibold">Gas Price</span>
+            <a
+              href="https://worldscan.org/gastracker"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-end hover:opacity-80 transition-opacity group"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500 dark:text-[#5d6785] uppercase tracking-wider font-semibold group-hover:text-blue-500 transition-colors">Gas Price</span>
+                <FiZap size={12} className="text-gray-400 group-hover:text-amber-500 transition-colors" />
+              </div>
               <div className="flex items-center gap-1">
-                <span className="text-xl font-bold font-mono">{gasPrice ? formatUnits(gasPrice, 9).slice(0, 4) : '0'}</span>
+                <span className="text-xl font-bold font-mono">
+                  {gasPrice ? (Number(formatUnits(gasPrice, 9)) < 0.01 ? '<0.01' : Number(formatUnits(gasPrice, 9)).toFixed(2)) : '...'}
+                </span>
                 <span className="text-xs text-gray-400">Gwei</span>
               </div>
-            </div>
+            </a>
           </motion.div>
 
           {/* Features Vertical List */}
