@@ -9,9 +9,12 @@ import { FACTORY_ADDRESS, FACTORY_ABI } from '@/config/contracts'
 import { formatUnits } from 'viem'
 import { useMiniKit } from '@/components/MiniKitDetector'
 import { WorldIDVerify } from '@/components/WorldIDVerify'
+import { useTokenPrices } from '@/hooks/useTokenPrices'
+import { TOKEN_ICONS } from '@/config/tokenIcons'
 
 export default function LandingPage() {
   const { isWorldApp } = useMiniKit()
+  const { prices } = useTokenPrices()
 
 
   // 1. Total Pairs
@@ -117,24 +120,40 @@ export default function LandingPage() {
               <span className="text-xs text-gray-500 dark:text-[#5d6785] uppercase tracking-wider font-semibold">Active Pairs</span>
               <span className="text-xl font-bold font-mono">{allPairsLength?.toString() || '0'}</span>
             </div>
-            <div className="h-8 w-px bg-gray-200 dark:bg-[#293249]" />
-            <a
-              href="https://worldscan.org/gastracker"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col items-end hover:opacity-80 transition-opacity group"
-            >
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-gray-500 dark:text-[#5d6785] uppercase tracking-wider font-semibold group-hover:text-blue-500 transition-colors">Gas Price</span>
-                <FiZap size={12} className="text-gray-400 group-hover:text-amber-500 transition-colors" />
+            <div className="flex gap-6 items-center">
+              {/* Prices Ticker */}
+              <div className="hidden sm:flex items-center gap-4">
+                <div className="flex items-center gap-1.5">
+                  <img src={TOKEN_ICONS.WLD} className="w-5 h-5 rounded-full" alt="WLD" />
+                  <span className="font-medium text-sm">${prices['WLD']?.toFixed(2) || '...'}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <img src={TOKEN_ICONS.WETH} className="w-5 h-5 rounded-full" alt="WETH" />
+                  <span className="font-medium text-sm">${prices['WETH']?.toFixed(2) || '...'}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <span className="text-xl font-bold font-mono">
-                  {gasPrice ? (Number(formatUnits(gasPrice, 9)) < 0.01 ? '<0.01' : Number(formatUnits(gasPrice, 9)).toFixed(2)) : '...'}
-                </span>
-                <span className="text-xs text-gray-400">Gwei</span>
-              </div>
-            </a>
+
+              <div className="h-8 w-px bg-gray-200 dark:bg-[#293249] hidden sm:block" />
+
+              {/* Gas Price */}
+              <a
+                href="https://worldscan.org/gastracker"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-end hover:opacity-80 transition-opacity group"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-500 dark:text-[#5d6785] uppercase tracking-wider font-semibold group-hover:text-blue-500 transition-colors">Gas Price</span>
+                  <FiZap size={12} className="text-gray-400 group-hover:text-amber-500 transition-colors" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xl font-bold font-mono">
+                    {gasPrice ? (Number(formatUnits(gasPrice, 9)) < 0.01 ? '<0.01' : Number(formatUnits(gasPrice, 9)).toFixed(2)) : '...'}
+                  </span>
+                  <span className="text-xs text-gray-400">Gwei</span>
+                </div>
+              </a>
+            </div>
           </motion.div>
 
           {/* Features Vertical List */}
