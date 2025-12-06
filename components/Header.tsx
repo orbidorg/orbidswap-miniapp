@@ -90,17 +90,7 @@ export function Header() {
                     </div>
 
                     {isWalletConnected ? (
-                        walletAddress ? (
-                            // World App wallet display
-                            <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#131a2a] px-3 py-2 rounded-full">
-                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-500" />
-                                <span className="text-sm font-medium">
-                                    {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-                                </span>
-                            </div>
-                        ) : (
-                            <UserWalletPanel />
-                        )
+                        <UserWalletPanel />
                     ) : (
                         <Magnetic strength={0.2}>
                             <button

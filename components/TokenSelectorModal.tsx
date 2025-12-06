@@ -1,6 +1,9 @@
+'use client'
+
 import { useState } from 'react'
 import { FiSearch, FiX } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getTokenIcon } from '@/config/tokenIcons'
 
 interface TokenSelectorModalProps {
     isOpen: boolean
@@ -9,10 +12,10 @@ interface TokenSelectorModalProps {
 }
 
 const COMMON_TOKENS = [
-    { symbol: 'WLD', name: 'Worldcoin', address: '0x0000000000000000000000000000000000000000' },
+    { symbol: 'WLD', name: 'Worldcoin', address: '0x2cFc85d8E48F8EAB294be644d9E25C3030863003' },
     { symbol: 'WETH', name: 'Wrapped Ether', address: '0xdBd74deF5339C659719Afd3f533412b5de4D3736' },
-    { symbol: 'USDC', name: 'USD Coin', address: '0x...' }, // Placeholder
-    { symbol: 'DAI', name: 'Dai Stablecoin', address: '0x...' }, // Placeholder
+    { symbol: 'USDC', name: 'USD Coin', address: '0x79A02482A880bCE3F13e09Da970dC34db4CD24d1' },
+    { symbol: 'USDT', name: 'Tether USD', address: '0x...' },
 ]
 
 export function TokenSelectorModal({ isOpen, onClose, onSelect }: TokenSelectorModalProps) {
@@ -58,9 +61,12 @@ export function TokenSelectorModal({ isOpen, onClose, onSelect }: TokenSelectorM
                                         }}
                                         className="flex items-center gap-2 bg-gray-100 dark:bg-[#0d111c] border border-gray-200 dark:border-[#293249] hover:border-black dark:hover:border-[#4c82fb] rounded-full px-3 py-1.5 transition-all group"
                                     >
-                                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-[8px] font-bold text-white">
-                                            {token.symbol[0]}
-                                        </div>
+                                        <img
+                                            src={getTokenIcon(token.symbol)}
+                                            alt={token.symbol}
+                                            className="w-5 h-5 rounded-full"
+                                            onError={(e) => { e.currentTarget.src = '/globe.svg' }}
+                                        />
                                         <span className="text-gray-900 dark:text-white font-medium text-sm group-hover:text-black dark:group-hover:text-[#4c82fb] transition-colors">{token.symbol}</span>
                                     </button>
                                 ))}
@@ -79,15 +85,17 @@ export function TokenSelectorModal({ isOpen, onClose, onSelect }: TokenSelectorM
                                             className="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-[#293249]/50 rounded-xl transition-colors group"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xs font-bold text-white shadow-lg">
-                                                    {token.symbol[0]}
-                                                </div>
+                                                <img
+                                                    src={getTokenIcon(token.symbol)}
+                                                    alt={token.symbol}
+                                                    className="w-8 h-8 rounded-full"
+                                                    onError={(e) => { e.currentTarget.src = '/globe.svg' }}
+                                                />
                                                 <div className="text-left">
                                                     <div className="text-gray-900 dark:text-white font-medium group-hover:text-black dark:group-hover:text-[#4c82fb] transition-colors">{token.name}</div>
                                                     <div className="text-gray-500 dark:text-[#5d6785] text-xs">{token.symbol}</div>
                                                 </div>
                                             </div>
-                                            {/* Balance placeholder */}
                                             <div className="text-gray-900 dark:text-white text-sm">0</div>
                                         </button>
                                     ))}
