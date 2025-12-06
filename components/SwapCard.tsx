@@ -328,9 +328,12 @@ export function SwapCard() {
                                 onClick={() => openTokenSelector('sell')}
                                 className="flex items-center gap-2 bg-white dark:bg-[#293249] hover:bg-gray-100 dark:hover:bg-[#404a67] text-gray-900 dark:text-white px-3 py-1.5 rounded-full transition-colors shrink-0 shadow-sm dark:shadow-none"
                             >
-                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-[10px] font-bold">
-                                    {sellToken.symbol[0]}
-                                </div>
+                                <img
+                                    src={getTokenIcon(sellToken.symbol)}
+                                    alt={sellToken.symbol}
+                                    className="w-6 h-6 rounded-full"
+                                    onError={(e) => { e.currentTarget.src = '/globe.svg' }}
+                                />
                                 <span className="font-semibold text-lg">{sellToken.symbol}</span>
                                 <FiArrowDown size={16} />
                             </button>
@@ -366,9 +369,12 @@ export function SwapCard() {
                                     onClick={() => openTokenSelector('buy')}
                                     className="flex items-center gap-2 bg-white dark:bg-[#293249] hover:bg-gray-100 dark:hover:bg-[#404a67] text-gray-900 dark:text-white px-3 py-1.5 rounded-full transition-colors shrink-0 shadow-sm dark:shadow-none"
                                 >
-                                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-[10px] font-bold">
-                                        {buyToken.symbol[0]}
-                                    </div>
+                                    <img
+                                        src={getTokenIcon(buyToken.symbol)}
+                                        alt={buyToken.symbol}
+                                        className="w-6 h-6 rounded-full"
+                                        onError={(e) => { e.currentTarget.src = '/globe.svg' }}
+                                    />
                                     <span className="font-semibold text-lg">{buyToken.symbol}</span>
                                     <FiArrowDown size={16} />
                                 </button>
