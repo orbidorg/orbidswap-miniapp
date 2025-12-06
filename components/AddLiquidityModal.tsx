@@ -9,6 +9,7 @@ import { toast } from 'react-hot-toast'
 import { ERC20_ABI, ROUTER_ADDRESS, ROUTER_ABI, FACTORY_ADDRESS, FACTORY_ABI, PAIR_ABI, WETH_ADDRESS } from '../config/contracts'
 import { TokenSelectorModal } from './TokenSelectorModal'
 import { useDebounce } from '../hooks/useDebounce'
+import { TokenIcon } from './TokenIcon'
 
 interface AddLiquidityModalProps {
     isOpen: boolean
@@ -196,8 +197,15 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
                                         onChange={(e) => setAmountA(e.target.value)}
                                         className="w-full bg-transparent text-3xl text-gray-900 dark:text-white outline-none placeholder-gray-400 dark:placeholder-[#5d6785]"
                                     />
-                                    <button onClick={() => openSelector('A')} className="flex items-center gap-2 bg-white dark:bg-[#293249] px-3 py-1.5 rounded-full text-gray-900 dark:text-white shrink-0 shadow-sm dark:shadow-none">
-                                        {tokenA ? tokenA.symbol : 'Select'} <FiArrowDown />
+                                    <button onClick={() => openSelector('A')} className="flex items-center gap-2 bg-white dark:bg-[#293249] px-3 py-1.5 rounded-full text-gray-900 dark:text-white shrink-0 shadow-sm dark:shadow-none transition-colors hover:bg-gray-100 dark:hover:bg-[#404a67]">
+                                        {tokenA ? (
+                                            <>
+                                                <TokenIcon symbol={tokenA.symbol} size={24} />
+                                                <span className="font-semibold">{tokenA.symbol}</span>
+                                            </>
+                                        ) : (
+                                            <span>Select</span>
+                                        )} <FiArrowDown />
                                     </button>
                                 </div>
                             </div>
@@ -221,8 +229,15 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
                                         onChange={(e) => setAmountB(e.target.value)}
                                         className="w-full bg-transparent text-3xl text-gray-900 dark:text-white outline-none placeholder-gray-400 dark:placeholder-[#5d6785]"
                                     />
-                                    <button onClick={() => openSelector('B')} className="flex items-center gap-2 bg-white dark:bg-[#293249] px-3 py-1.5 rounded-full text-gray-900 dark:text-white shrink-0 shadow-sm dark:shadow-none">
-                                        {tokenB ? tokenB.symbol : 'Select'} <FiArrowDown />
+                                    <button onClick={() => openSelector('B')} className="flex items-center gap-2 bg-white dark:bg-[#293249] px-3 py-1.5 rounded-full text-gray-900 dark:text-white shrink-0 shadow-sm dark:shadow-none transition-colors hover:bg-gray-100 dark:hover:bg-[#404a67]">
+                                        {tokenB ? (
+                                            <>
+                                                <TokenIcon symbol={tokenB.symbol} size={24} />
+                                                <span className="font-semibold">{tokenB.symbol}</span>
+                                            </>
+                                        ) : (
+                                            <span>Select</span>
+                                        )} <FiArrowDown />
                                     </button>
                                 </div>
                             </div>
@@ -244,6 +259,7 @@ export function AddLiquidityModal({ isOpen, onClose }: AddLiquidityModalProps) {
                 isOpen={isTokenSelectorOpen}
                 onClose={() => setIsTokenSelectorOpen(false)}
                 onSelect={handleTokenSelect}
+                excludeToken={selectorMode === 'A' ? tokenB?.symbol : tokenA?.symbol}
             />
         </AnimatePresence>
     )

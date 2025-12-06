@@ -7,6 +7,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { parseUnits, formatUnits } from 'viem'
 import { toast } from 'react-hot-toast'
 import { ERC20_ABI, ROUTER_ADDRESS, ROUTER_ABI, PAIR_ABI } from '../config/contracts'
+import { TokenIcon } from './TokenIcon'
 
 interface RemoveLiquidityModalProps {
     isOpen: boolean
@@ -151,14 +152,14 @@ export function RemoveLiquidityModal({ isOpen, onClose, pairAddress, tokenA, tok
                                 <div className="flex justify-between items-center mb-2">
                                     <div className="text-gray-900 dark:text-white text-xl font-medium">0.00</div>
                                     <div className="flex items-center gap-2">
-                                        <div className="w-5 h-5 rounded-full bg-blue-500"></div>
+                                        <TokenIcon symbol={tokenA.symbol} size={20} />
                                         <span className="text-gray-900 dark:text-white">{tokenA.symbol}</span>
                                     </div>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <div className="text-gray-900 dark:text-white text-xl font-medium">0.00</div>
                                     <div className="flex items-center gap-2">
-                                        <div className="w-5 h-5 rounded-full bg-purple-500"></div>
+                                        <TokenIcon symbol={tokenB.symbol} size={20} />
                                         <span className="text-gray-900 dark:text-white">{tokenB.symbol}</span>
                                     </div>
                                 </div>

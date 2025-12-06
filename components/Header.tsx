@@ -55,9 +55,7 @@ export function Header() {
                 {/* Left: Logo */}
                 <div className="flex items-center gap-2 sm:gap-4">
                     <Link href="/" className="flex items-center gap-2 group shrink-0">
-                        <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-blue-600 to-violet-600 rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
-                            O
-                        </div>
+                        <img src="/logo.svg" alt="OrbIdSwap" className="w-8 h-8 sm:w-9 sm:h-9 group-hover:scale-105 transition-transform" />
                         <span className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white hidden sm:block">OrbIdSwap</span>
                     </Link>
 
