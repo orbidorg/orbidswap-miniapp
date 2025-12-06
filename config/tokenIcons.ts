@@ -1,23 +1,23 @@
-// Token icon URLs - using reliable CDN sources
-// These are the official token logos
+// Token icon URLs - using direct reliable sources
+// Fallback to placeholder if image fails
 
 export const TOKEN_ICONS: Record<string, string> = {
-    // World Chain tokens - using CoinGecko/other reliable sources
-    WLD: 'https://assets.coingecko.com/coins/images/31069/standard/worldcoin.jpg',
-    ETH: 'https://assets.coingecko.com/coins/images/279/standard/ethereum.png',
-    WETH: 'https://assets.coingecko.com/coins/images/2518/standard/weth.png',
+    // Main tokens with verified working URLs
+    WLD: 'https://s2.coinmarketcap.com/static/img/coins/64x64/13502.png',
+    ETH: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png',
+    WETH: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2396.png',
 
     // Stablecoins
-    USDC: 'https://assets.coingecko.com/coins/images/6319/standard/usdc.png',
-    USDT: 'https://assets.coingecko.com/coins/images/325/standard/Tether.png',
-    DAI: 'https://assets.coingecko.com/coins/images/9956/standard/Badge_Dai.png',
+    USDC: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png',
+    USDT: 'https://s2.coinmarketcap.com/static/img/coins/64x64/825.png',
+    DAI: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4943.png',
 
     // Major cryptos
-    BTC: 'https://assets.coingecko.com/coins/images/1/standard/bitcoin.png',
-    WBTC: 'https://assets.coingecko.com/coins/images/7598/standard/wrapped_bitcoin_wbtc.png',
+    BTC: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1.png',
+    WBTC: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3717.png',
 
-    // Default fallback
-    DEFAULT: '/globe.svg',
+    // Default fallback - gradient placeholder
+    DEFAULT: '',
 }
 
 // Known token addresses on World Chain Mainnet

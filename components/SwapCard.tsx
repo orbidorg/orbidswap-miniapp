@@ -11,7 +11,7 @@ import { SettingsModal } from './SettingsModal'
 import { useDebounce } from '../hooks/useDebounce'
 import { motion } from 'framer-motion'
 import { useMiniKit } from './MiniKitDetector'
-import { getTokenIcon } from '../config/tokenIcons'
+import { TokenIcon } from './TokenIcon'
 
 export function SwapCard() {
     const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
@@ -328,12 +328,7 @@ export function SwapCard() {
                                 onClick={() => openTokenSelector('sell')}
                                 className="flex items-center gap-2 bg-white dark:bg-[#293249] hover:bg-gray-100 dark:hover:bg-[#404a67] text-gray-900 dark:text-white px-3 py-1.5 rounded-full transition-colors shrink-0 shadow-sm dark:shadow-none"
                             >
-                                <img
-                                    src={getTokenIcon(sellToken.symbol)}
-                                    alt={sellToken.symbol}
-                                    className="w-6 h-6 rounded-full"
-                                    onError={(e) => { e.currentTarget.src = '/globe.svg' }}
-                                />
+                                <TokenIcon symbol={sellToken.symbol} size={24} />
                                 <span className="font-semibold text-lg">{sellToken.symbol}</span>
                                 <FiArrowDown size={16} />
                             </button>
@@ -344,11 +339,24 @@ export function SwapCard() {
                         </div>
                     </div>
 
-                    {/* Arrow Separator */}
+                    {/* Arrow Separator - Click to swap tokens */}
                     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                        <div className="bg-gray-50 dark:bg-[#131a2a] p-1.5 rounded-xl border-[4px] border-white dark:border-[#0d111c]">
+                        <button
+                            onClick={() => {
+                                if (buyToken) {
+                                    const tempToken = sellToken
+                                    setSellToken(buyToken)
+                                    setBuyToken(tempToken)
+                                    const tempAmount = sellAmount
+                                    setSellAmount(buyAmount)
+                                    setBuyAmount(tempAmount)
+                                }
+                            }}
+                            disabled={!buyToken}
+                            className="bg-gray-50 dark:bg-[#131a2a] p-1.5 rounded-xl border-[4px] border-white dark:border-[#0d111c] hover:bg-gray-100 dark:hover:bg-[#293249] transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                        >
                             <FiArrowDown size={20} className="text-gray-500 dark:text-[#98a1c0]" />
-                        </div>
+                        </button>
                     </div>
 
                     {/* Buy Input */}
@@ -369,12 +377,7 @@ export function SwapCard() {
                                     onClick={() => openTokenSelector('buy')}
                                     className="flex items-center gap-2 bg-white dark:bg-[#293249] hover:bg-gray-100 dark:hover:bg-[#404a67] text-gray-900 dark:text-white px-3 py-1.5 rounded-full transition-colors shrink-0 shadow-sm dark:shadow-none"
                                 >
-                                    <img
-                                        src={getTokenIcon(buyToken.symbol)}
-                                        alt={buyToken.symbol}
-                                        className="w-6 h-6 rounded-full"
-                                        onError={(e) => { e.currentTarget.src = '/globe.svg' }}
-                                    />
+                                    <TokenIcon symbol={buyToken.symbol} size={24} />
                                     <span className="font-semibold text-lg">{buyToken.symbol}</span>
                                     <FiArrowDown size={16} />
                                 </button>
