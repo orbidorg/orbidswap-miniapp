@@ -1,0 +1,17 @@
+node_modules
+.env
+.DS_Store
+coverage
+coverage.json
+typechain
+typechain-types
+
+# Hardhat
+contracts/artifacts
+contracts/cache
+
+# Next.js
+.next
+out
+build
+dist
