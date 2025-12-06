@@ -178,7 +178,7 @@ export default function LandingPage() {
                 Unlock premium features with World ID
               </p>
               <WorldIDVerify
-                action="orbidswap-verify"
+                action="orbidswapverify"
                 onSuccess={(hash) => console.log('Verified!', hash)}
               />
             </div>
