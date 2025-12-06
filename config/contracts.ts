@@ -1,6 +1,11 @@
+// Note: These are testnet contracts. For mainnet, deploy new contracts to World Chain mainnet.
+// For now, we'll use them to show the UI works, but swaps will only work after mainnet deployment.
 export const FACTORY_ADDRESS = '0x8b0e4101eFf62C6B7B209f536c91bd4Beef7523b'
 export const WETH_ADDRESS = '0xdBd74deF5339C659719Afd3f533412b5de4D3736'
 export const ROUTER_ADDRESS = '0x7931587aD009094FEf5cf462387C8909dC4C0625'
+
+// WLD token address on World Chain mainnet
+export const WLD_TOKEN_ADDRESS = '0x2cFc85d8E48F8EAB294be644d9E25C3030863003'
 
 export const ERC20_ABI = [
     {
