@@ -24,14 +24,39 @@ export function MiniKitDetector({ children }: { children: React.ReactNode }) {
     const [walletAddress, setWalletAddress] = useState<string | null>(null)
 
     useEffect(() => {
-        // Check if MiniKit is installed (running in World App)
-        const installed = MiniKit.isInstalled()
-        setIsInstalled(installed)
+        // Check immediately
+        const checkMiniKit = () => {
+            try {
+                const installed = MiniKit.isInstalled()
+                console.log('🔍 MiniKit.isInstalled():', installed)
+                console.log('🔍 window.MiniKit:', typeof window !== 'undefined' ? (window as any).MiniKit : 'undefined')
 
-        if (installed) {
-            console.log('🌍 Running inside World App!')
-        } else {
-            console.log('🌐 Running in external browser')
+                if (installed) {
+                    console.log('🌍 Running inside World App!')
+                    setIsInstalled(true)
+                } else {
+                    console.log('🌐 Running in external browser')
+                }
+                return installed
+            } catch (e) {
+                console.log('❌ MiniKit check error:', e)
+                return false
+            }
+        }
+
+        // Check immediately
+        const immediate = checkMiniKit()
+
+        // Also check after a short delay (MiniKit might inject late)
+        if (!immediate) {
+            const timeout = setTimeout(() => {
+                const delayed = checkMiniKit()
+                if (delayed) {
+                    setIsInstalled(true)
+                }
+            }, 500)
+
+            return () => clearTimeout(timeout)
         }
     }, [])
 
