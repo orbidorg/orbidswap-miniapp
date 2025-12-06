@@ -8,6 +8,8 @@ import { useReadContract, useGasPrice } from 'wagmi'
 import { FACTORY_ADDRESS, FACTORY_ABI } from '@/config/contracts'
 import { formatUnits } from 'viem'
 import { useMiniKit } from '@/components/MiniKitDetector'
+import { WorldIDVerify } from '@/components/WorldIDVerify'
+import { useState } from 'react'
 
 export default function LandingPage() {
   const { isWorldApp } = useMiniKit()
@@ -158,6 +160,30 @@ export default function LandingPage() {
             </div>
           </div>
         </motion.div>
+
+        {/* World ID Verification - Only show in World App */}
+        {isWorldApp && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mt-8 w-full max-w-sm"
+          >
+            <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl p-4 border border-green-500/20">
+              <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <FiShield className="text-green-500" />
+                Verify Your Humanity
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-[#5d6785] mb-3">
+                Unlock premium features with World ID
+              </p>
+              <WorldIDVerify
+                action="orbidswap-verify"
+                onSuccess={(hash) => console.log('Verified!', hash)}
+              />
+            </div>
+          </motion.div>
+        )}
 
         {/* Footer Text */}
         <div className="mt-8 text-xs text-gray-400 dark:text-[#5d6785]">
