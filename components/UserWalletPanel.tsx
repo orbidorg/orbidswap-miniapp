@@ -1,20 +1,44 @@
-import { useAccount, useDisconnect, useBalance } from 'wagmi'
+'use client'
+
+import { useAccount, useDisconnect, useBalance, useReadContract } from 'wagmi'
 import { FiCopy, FiExternalLink, FiLogOut, FiX, FiCheck } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useRef, useEffect } from 'react'
 import { formatUnits } from 'viem'
 import { GradientIdenticon } from './Identicon'
+import { useMiniKit } from './MiniKitDetector'
+import { WLD_TOKEN_ADDRESS, ERC20_ABI } from '@/config/contracts'
 
-// Mock WLD price for display (will be replaced with real price later)
-const MOCK_WLD_PRICE_USD = 3.50
+// WLD price for display
+const WLD_PRICE_USD = 2.30
 
 export function UserWalletPanel() {
-    const { address, isConnected } = useAccount()
-    const { disconnect } = useDisconnect()
-    const { data: balance } = useBalance({ address })
+    const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
+    const { disconnect: wagmiDisconnect } = useDisconnect()
+    const { isWorldApp, walletAddress: minikitAddress, isConnected: minikitConnected, disconnect: minikitDisconnect } = useMiniKit()
+
+    // Use MiniKit address in World App, wagmi otherwise
+    const address = minikitAddress || wagmiAddress
+    const isConnected = minikitConnected || wagmiConnected
+
     const [isOpen, setIsOpen] = useState(false)
     const [copied, setCopied] = useState(false)
     const panelRef = useRef<HTMLDivElement>(null)
+
+    // ETH balance (native)
+    const { data: ethBalance } = useBalance({
+        address: address as `0x${string}`,
+        query: { enabled: !!address }
+    })
+
+    // WLD token balance
+    const { data: wldBalanceRaw } = useReadContract({
+        address: WLD_TOKEN_ADDRESS as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: 'balanceOf',
+        args: address ? [address as `0x${string}`] : undefined,
+        query: { enabled: !!address }
+    })
 
     // Close on click outside
     useEffect(() => {
@@ -34,11 +58,20 @@ export function UserWalletPanel() {
         setTimeout(() => setCopied(false), 2000)
     }
 
+    const handleDisconnect = () => {
+        if (isWorldApp) {
+            minikitDisconnect()
+        } else {
+            wagmiDisconnect()
+        }
+        setIsOpen(false)
+    }
+
     if (!isConnected || !address) return null
 
     const shortAddress = `${address.slice(0, 6)}...${address.slice(-4)}`
-    const balanceValue = balance ? parseFloat(formatUnits(balance.value, balance.decimals)) : 0
-    const usdValue = balanceValue * MOCK_WLD_PRICE_USD
+    const wldBalance = wldBalanceRaw ? parseFloat(formatUnits(wldBalanceRaw as bigint, 18)) : 0
+    const usdValue = wldBalance * WLD_PRICE_USD
 
     return (
         <div className="relative" ref={panelRef}>
@@ -48,9 +81,6 @@ export function UserWalletPanel() {
             >
                 <GradientIdenticon address={address} size={24} />
                 <span className="text-gray-900 dark:text-white font-medium">{shortAddress}</span>
-                <span className="text-gray-500 dark:text-[#98a1c0] hidden sm:block">
-                    {balance ? `${balanceValue.toFixed(4)} WLD` : '...'}
-                </span>
             </button>
 
             <AnimatePresence>
@@ -68,7 +98,7 @@ export function UserWalletPanel() {
                                 <GradientIdenticon address={address} size={40} />
                                 <div>
                                     <div className="text-gray-900 dark:text-white font-bold">{shortAddress}</div>
-                                    <div className="text-gray-400 dark:text-[#5d6785] text-xs">World Chain Sepolia</div>
+                                    <div className="text-gray-400 dark:text-[#5d6785] text-xs">World Chain</div>
                                 </div>
                             </div>
                             <button onClick={() => setIsOpen(false)} className="text-gray-400 dark:text-[#5d6785] hover:text-gray-900 dark:hover:text-white p-1 hover:bg-gray-100 dark:hover:bg-[#293249] rounded-lg transition-colors">
@@ -83,7 +113,7 @@ export function UserWalletPanel() {
                                 ${usdValue.toFixed(2)}
                             </div>
                             <div className="text-gray-500 dark:text-[#98a1c0] text-sm mt-1">
-                                {balanceValue.toFixed(4)} WLD
+                                {wldBalance.toFixed(4)} WLD
                             </div>
                         </div>
 
@@ -93,8 +123,8 @@ export function UserWalletPanel() {
                                 onClick={handleCopy}
                                 whileTap={{ scale: 0.95 }}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all text-sm font-medium ${copied
-                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                                        : 'bg-gray-100 dark:bg-[#293249] hover:bg-gray-200 dark:hover:bg-[#404a67] text-gray-900 dark:text-white'
+                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                                    : 'bg-gray-100 dark:bg-[#293249] hover:bg-gray-200 dark:hover:bg-[#404a67] text-gray-900 dark:text-white'
                                     }`}
                             >
                                 <AnimatePresence mode="wait">
@@ -124,7 +154,7 @@ export function UserWalletPanel() {
                                 </AnimatePresence>
                             </motion.button>
                             <a
-                                href={`https://worldchain-sepolia.explorer.alchemy.com/address/${address}`}
+                                href={`https://worldchain-mainnet.explorer.alchemy.com/address/${address}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex-1 flex items-center justify-center gap-2 bg-gray-100 dark:bg-[#293249] hover:bg-gray-200 dark:hover:bg-[#404a67] text-gray-900 dark:text-white py-2.5 rounded-xl transition-colors text-sm font-medium"
@@ -136,10 +166,7 @@ export function UserWalletPanel() {
 
                         {/* Disconnect Button */}
                         <button
-                            onClick={() => {
-                                disconnect()
-                                setIsOpen(false)
-                            }}
+                            onClick={handleDisconnect}
                             className="w-full flex items-center justify-center gap-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 dark:text-red-400 py-3 rounded-xl transition-colors font-medium"
                         >
                             <FiLogOut size={16} />
