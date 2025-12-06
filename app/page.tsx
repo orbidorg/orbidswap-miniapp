@@ -186,8 +186,13 @@ export default function LandingPage() {
         )}
 
         {/* Footer Text */}
-        <div className="mt-8 text-xs text-gray-400 dark:text-[#5d6785]">
-          Built for World Chain 🌐
+        <div className="mt-8 text-xs text-gray-400 dark:text-[#5d6785] flex items-center justify-center gap-2">
+          Built for World Chain
+          <img
+            src="https://world.org/favicon.svg"
+            alt="World"
+            className="w-4 h-4"
+          />
         </div>
       </main>
     </div>
