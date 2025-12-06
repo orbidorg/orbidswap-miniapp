@@ -1,20 +1,20 @@
-// Token icon URLs from TrustWallet assets CDN
+// Token icon URLs - using reliable CDN sources
 // These are the official token logos
 
 export const TOKEN_ICONS: Record<string, string> = {
-    // World Chain native tokens
-    WLD: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/worldchain/assets/0x2cFc85d8E48F8EAB294be644d9E25C3030863003/logo.png',
-    ETH: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png',
-    WETH: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png',
+    // World Chain tokens - using CoinGecko/other reliable sources
+    WLD: 'https://assets.coingecko.com/coins/images/31069/standard/worldcoin.jpg',
+    ETH: 'https://assets.coingecko.com/coins/images/279/standard/ethereum.png',
+    WETH: 'https://assets.coingecko.com/coins/images/2518/standard/weth.png',
 
     // Stablecoins
-    USDC: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
-    USDT: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png',
-    DAI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B175474E89094C44Da98b954EesdeaD5B0256',
+    USDC: 'https://assets.coingecko.com/coins/images/6319/standard/usdc.png',
+    USDT: 'https://assets.coingecko.com/coins/images/325/standard/Tether.png',
+    DAI: 'https://assets.coingecko.com/coins/images/9956/standard/Badge_Dai.png',
 
     // Major cryptos
-    BTC: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/bitcoin/info/logo.png',
-    WBTC: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599/logo.png',
+    BTC: 'https://assets.coingecko.com/coins/images/1/standard/bitcoin.png',
+    WBTC: 'https://assets.coingecko.com/coins/images/7598/standard/wrapped_bitcoin_wbtc.png',
 
     // Default fallback
     DEFAULT: '/globe.svg',
@@ -28,7 +28,6 @@ export const WORLD_CHAIN_TOKENS: Record<string, { symbol: string; name: string; 
         decimals: 18,
         icon: TOKEN_ICONS.WLD,
     },
-    // Add more World Chain tokens as they become available
 }
 
 export function getTokenIcon(symbol: string): string {
