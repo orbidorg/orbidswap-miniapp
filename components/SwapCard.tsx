@@ -10,29 +10,21 @@ import { TokenSelectorModal } from './TokenSelectorModal'
 import { SettingsModal } from './SettingsModal'
 import { useDebounce } from '../hooks/useDebounce'
 import { motion } from 'framer-motion'
-import { useMiniKit } from './MiniKitDetector'
 import { TokenIcon } from './TokenIcon'
 import { useTokenPrices } from '../hooks/useTokenPrices'
 
+import { SwapDetails } from './SwapDetails'
+import { ReviewSwapModal } from './ReviewSwapModal'
+
 export function SwapCard() {
-    const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
+    const { address, isConnected } = useAccount()
     const { connect, connectors } = useConnect()
-    const { isWorldApp, isConnected: minikitConnected, connect: minikitConnect, walletAddress: minikitAddress } = useMiniKit()
+    const { prices } = useTokenPrices()
 
-    // Use either wagmi or minikit address/connection
-    const address = minikitAddress || wagmiAddress
-    const isConnected = wagmiConnected || minikitConnected
-
-    const { getPrice } = useTokenPrices()
-
-    const handleConnect = async () => {
-        if (isWorldApp) {
-            await minikitConnect()
-        } else {
-            const injectedConnector = connectors.find(c => c.id === 'injected') || connectors[0]
-            if (injectedConnector) {
-                connect({ connector: injectedConnector })
-            }
+    const handleConnect = () => {
+        const injectedConnector = connectors.find(c => c.id === 'injected') || connectors[0]
+        if (injectedConnector) {
+            connect({ connector: injectedConnector })
         }
     }
 
@@ -44,6 +36,8 @@ export function SwapCard() {
     // Modals State
     const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState(false)
     const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+    const [isReviewOpen, setIsReviewOpen] = useState(false)
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false)
     const [selectorMode, setSelectorMode] = useState<'sell' | 'buy'>('sell')
 
     // Tokens State
@@ -51,14 +45,14 @@ export function SwapCard() {
     const [buyToken, setBuyToken] = useState<null | { symbol: string, name: string, address: string }>(null)
 
     // ETH Balance
-    const { data: ethBalance } = useBalance({ address: address as `0x${string}` })
+    const { data: ethBalance } = useBalance({ address })
 
     // Sell Token Balance (ERC20)
     const { data: sellTokenBalance } = useReadContract({
         address: sellToken.address as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'balanceOf',
-        args: address ? [address as `0x${string}`] : undefined,
+        args: address ? [address] : undefined,
         query: {
             enabled: !!address && sellToken.symbol !== 'ETH',
         }
@@ -69,7 +63,7 @@ export function SwapCard() {
         address: buyToken?.address as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'balanceOf',
-        args: address ? [address as `0x${string}`] : undefined,
+        args: address ? [address] : undefined,
         query: {
             enabled: !!address && !!buyToken && buyToken.symbol !== 'ETH',
         }
@@ -133,7 +127,7 @@ export function SwapCard() {
         address: sellToken.address as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'allowance',
-        args: address ? [address as `0x${string}`, ROUTER_ADDRESS as `0x${string}`] : undefined,
+        args: address ? [address, ROUTER_ADDRESS as `0x${string}`] : undefined,
         query: {
             enabled: !!address && sellToken.symbol !== 'ETH',
         }
@@ -144,6 +138,7 @@ export function SwapCard() {
         mutation: {
             onSuccess: () => {
                 toast.success('Transaction submitted!')
+                setIsReviewOpen(false)
             },
             onError: (error) => {
                 toast.error(`Transaction failed: ${error.message.slice(0, 50)}...`)
@@ -178,7 +173,14 @@ export function SwapCard() {
         })
     }
 
-    const handleSwap = () => {
+    // Trigger Review Modal
+    const handleSwapClick = () => {
+        if (!path || !address) return
+        setIsReviewOpen(true)
+    }
+
+    // Actual Execution
+    const executeSwap = () => {
         if (!path || !address) return
 
         const amountIn = parseUnits(sellAmount, 18)
@@ -199,7 +201,7 @@ export function SwapCard() {
                 address: ROUTER_ADDRESS as `0x${string}`,
                 abi: ROUTER_ABI,
                 functionName: 'swapExactETHForTokens',
-                args: [amountOutMin, path, address as `0x${string}`, deadlineTimestamp],
+                args: [amountOutMin, path, address, deadlineTimestamp],
                 value: amountIn,
             })
         } else if (buyToken?.symbol === 'ETH') {
@@ -207,14 +209,14 @@ export function SwapCard() {
                 address: ROUTER_ADDRESS as `0x${string}`,
                 abi: ROUTER_ABI,
                 functionName: 'swapExactTokensForETH',
-                args: [amountIn, amountOutMin, path, address as `0x${string}`, deadlineTimestamp],
+                args: [amountIn, amountOutMin, path, address, deadlineTimestamp],
             })
         } else {
             writeContract({
                 address: ROUTER_ADDRESS as `0x${string}`,
                 abi: ROUTER_ABI,
                 functionName: 'swapExactTokensForTokens',
-                args: [amountIn, amountOutMin, path, address as `0x${string}`, deadlineTimestamp],
+                args: [amountIn, amountOutMin, path, address, deadlineTimestamp],
             })
         }
     }
@@ -230,6 +232,33 @@ export function SwapCard() {
         } else {
             setBuyToken(token)
         }
+    }
+
+    // Derived Data for Details
+    const rate = buyAmount && sellAmount && parseFloat(sellAmount) > 0
+        ? `1 ${sellToken.symbol} = ${(parseFloat(buyAmount) / parseFloat(sellAmount)).toFixed(4)} ${buyToken?.symbol}`
+        : '-'
+
+    // Fee USD (0.3% of sell amount USD)
+    const totalSellUsd = sellAmount && prices[sellToken.symbol] ? parseFloat(sellAmount) * prices[sellToken.symbol] : 0
+    const feeUsd = (totalSellUsd * 0.003).toFixed(2)
+
+    // Price Impact (Simple Diff for now: Mocking -0.05% as standard for small liquid pairs)
+    // In production this compares AmountOut vs SpotPrice
+    const priceImpact = '-0.05%'
+
+    const swapDetails = {
+        rate,
+        fee: `$${feeUsd}`,
+        networkCost: '~$0.05', // Mocked low cost for L2
+        priceImpact,
+        maxSlippage: slippage === 'auto' ? '0.50%' : `${slippage}%`,
+        routing: 'OrbidSwap API'
+    }
+
+    const usdValue = {
+        sell: totalSellUsd > 0 ? `~$${totalSellUsd.toFixed(2)}` : '$0.00',
+        buy: buyAmount && buyToken && prices[buyToken.symbol] ? `~$${(parseFloat(buyAmount) * prices[buyToken.symbol]).toFixed(2)}` : '$0.00'
     }
 
     // Button Logic
@@ -281,7 +310,7 @@ export function SwapCard() {
 
         return (
             <button
-                onClick={handleSwap}
+                onClick={handleSwapClick}
                 disabled={isWritePending || isConfirming}
                 className="w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-semibold text-base py-4 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] shadow-lg shadow-blue-500/20"
             >
@@ -337,7 +366,11 @@ export function SwapCard() {
                             </button>
                         </div>
                         <div className="flex justify-between mt-2">
-                            <span className="text-gray-500 dark:text-[#5d6785] text-sm">${(parseFloat(sellAmount || '0') * getPrice(sellToken.symbol)).toFixed(2)}</span>
+                            <span className="text-gray-500 dark:text-[#5d6785] text-sm">
+                                {sellAmount && prices[sellToken.symbol]
+                                    ? `~$${(parseFloat(sellAmount) * prices[sellToken.symbol]).toFixed(2)}`
+                                    : '$0.00'}
+                            </span>
                             <span className="text-gray-500 dark:text-[#5d6785] text-sm">Balance: {parseFloat(getBalance(sellToken, ethBalance, sellTokenBalance)).toFixed(4)}</span>
                         </div>
                     </div>
@@ -356,7 +389,7 @@ export function SwapCard() {
                                 }
                             }}
                             disabled={!buyToken}
-                            className="bg-gray-50 dark:bg-[#131a2a] p-1.5 rounded-xl border-[4px] border-white dark:border-[#0d111c] hover:bg-gray-100 dark:hover:bg-[#293249] transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                            className="bg-gray-50 dark:bg-[#131a2a] p-1.5 rounded-xl border-[4px] border-white dark:border-[#0d111c] hover:bg-gray-100 dark:hover:bg-[#293249] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <FiArrowDown size={20} className="text-gray-500 dark:text-[#98a1c0]" />
                         </button>
@@ -395,14 +428,29 @@ export function SwapCard() {
                             )}
                         </div>
                         <div className="flex justify-between mt-2">
-                            <span className="text-gray-500 dark:text-[#5d6785] text-sm">${(parseFloat(buyAmount || '0') * (buyToken ? getPrice(buyToken.symbol) : 0)).toFixed(2)}</span>
+                            <span className="text-gray-500 dark:text-[#5d6785] text-sm">
+                                {buyAmount && buyToken && prices[buyToken.symbol]
+                                    ? `~$${(parseFloat(buyAmount) * prices[buyToken.symbol]).toFixed(2)}`
+                                    : '$0.00'}
+                            </span>
                             <span className="text-gray-500 dark:text-[#5d6785] text-sm">Balance: {parseFloat(getBalance(buyToken, ethBalance, buyTokenBalance)).toFixed(4)}</span>
                         </div>
                     </div>
                 </div>
 
+                {/* Swap Details Accordion */}
+                {buyAmount && (
+                    <div className="mt-2">
+                        <SwapDetails
+                            isOpen={isDetailsOpen}
+                            onToggle={() => setIsDetailsOpen(!isDetailsOpen)}
+                            details={swapDetails}
+                        />
+                    </div>
+                )}
+
                 {/* Action Button - Inside Card */}
-                <div className="pt-2">
+                <div className="pt-4">
                     {renderActionButton()}
                 </div>
             </motion.div>
@@ -421,6 +469,19 @@ export function SwapCard() {
                 setSlippage={setSlippage}
                 deadline={deadline}
                 setDeadline={setDeadline}
+            />
+
+            <ReviewSwapModal
+                isOpen={isReviewOpen}
+                onClose={() => setIsReviewOpen(false)}
+                onConfirm={executeSwap}
+                isPending={isWritePending || isConfirming}
+                sellToken={sellToken}
+                buyToken={buyToken || { symbol: '?', name: 'Select Token' }}
+                sellAmount={sellAmount}
+                buyAmount={buyAmount}
+                usdValue={usdValue}
+                details={swapDetails}
             />
         </>
     )
