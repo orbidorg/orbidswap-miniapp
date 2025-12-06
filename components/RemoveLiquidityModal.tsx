@@ -71,8 +71,8 @@ export function RemoveLiquidityModal({ isOpen, onClose, pairAddress, tokenA, tok
         const amountToRemove = (lpBalance as bigint * BigInt(percentage)) / 100n
         const deadline = BigInt(Math.floor(Date.now() / 1000) + 60 * 20)
 
-        if (tokenA.symbol === 'WLD' || tokenB.symbol === 'WLD') {
-            const tokenAddress = tokenA.symbol === 'WLD' ? tokenB.address : tokenA.address
+        if (tokenA.symbol === 'ETH' || tokenB.symbol === 'ETH') {
+            const tokenAddress = tokenA.symbol === 'ETH' ? tokenB.address : tokenA.address
             writeContract({
                 address: ROUTER_ADDRESS as `0x${string}`,
                 abi: ROUTER_ABI,

@@ -18,7 +18,7 @@ export default function LimitPage() {
     const address = minikitAddress || wagmiAddress
     const isConnected = wagmiConnected || minikitConnected
 
-    const [sellToken, setSellToken] = useState({ symbol: 'WLD', name: 'Worldcoin', address: '0x2cFc85d8E48F8EAB294be644d9E25C3030863003' })
+    const [sellToken, setSellToken] = useState({ symbol: 'ETH', name: 'Ethereum', address: '0x0000000000000000000000000000000000000000' })
     const [buyToken, setBuyToken] = useState<null | { symbol: string; name: string; address: string }>(null)
     const [sellAmount, setSellAmount] = useState('')
     const [limitPrice, setLimitPrice] = useState('')

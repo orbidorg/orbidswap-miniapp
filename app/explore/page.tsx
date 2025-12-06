@@ -11,6 +11,8 @@ import Link from 'next/link'
 
 const MOCK_WLD_PRICE_USD = 3.50
 
+import { WORLD_CHAIN_TOKENS } from '../../config/tokenIcons'
+
 interface Pool {
     address: string
     token0Symbol: string
@@ -18,9 +20,10 @@ interface Pool {
     tvlUsd: number
 }
 
-const KNOWN_TOKENS: Record<string, string> = {
-    [WETH_ADDRESS.toLowerCase()]: 'WLD',
-}
+const KNOWN_TOKENS: Record<string, string> = {}
+Object.values(WORLD_CHAIN_TOKENS).forEach(token => {
+    // Mapping mostly for backup if on-chain fails, but we use WORLD_CHAIN_TOKENS primarily
+})
 
 export default function Explore() {
     const [pools, setPools] = useState<Pool[]>([])
@@ -80,6 +83,11 @@ export default function Explore() {
 
         const loadedPools: Pool[] = []
         const symbolMap: Record<string, string> = { ...KNOWN_TOKENS }
+
+        // Pre-populate with known tokens
+        Object.entries(WORLD_CHAIN_TOKENS).forEach(([addr, token]) => {
+            symbolMap[addr.toLowerCase()] = token.symbol
+        })
 
         if (tokenSymbols) {
             tokenAddresses.forEach((addr, i) => {

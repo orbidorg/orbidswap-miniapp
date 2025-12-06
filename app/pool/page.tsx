@@ -9,6 +9,7 @@ import { formatUnits } from 'viem'
 import { FACTORY_ADDRESS, FACTORY_ABI, PAIR_ABI } from '../../config/contracts'
 import { motion } from 'framer-motion'
 import { FiPlus, FiDroplet } from 'react-icons/fi'
+import { WORLD_CHAIN_TOKENS } from '../../config/tokenIcons'
 
 export default function Pool() {
     const { address, isConnected } = useAccount()
@@ -68,8 +69,14 @@ export default function Pool() {
 
                 positions.push({
                     pairAddress,
-                    tokenA: { symbol: 'TKN1', address: token0Address },
-                    tokenB: { symbol: 'TKN2', address: token1Address },
+                    tokenA: {
+                        symbol: WORLD_CHAIN_TOKENS[token0Address.toLowerCase()]?.symbol || pairsData[baseIndex * 4]?.result ? 'TKN1' : 'TKN1', // Fallback
+                        address: token0Address
+                    },
+                    tokenB: {
+                        symbol: WORLD_CHAIN_TOKENS[token1Address.toLowerCase()]?.symbol || 'TKN2',
+                        address: token1Address
+                    },
                     liquidity: formatUnits(userBalance, 18),
                     share: share.toFixed(2) + '%'
                 })
