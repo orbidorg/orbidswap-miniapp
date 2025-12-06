@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import { FiSettings, FiArrowDown, FiClock, FiInfo } from 'react-icons/fi'
 import { useAccount, useConnect } from 'wagmi'
 import { Header } from '@/components/Header'
-import { Footer } from '@/components/Footer'
 import { TokenSelectorModal } from '@/components/TokenSelectorModal'
 import { SettingsModal } from '@/components/SettingsModal'
 import { TokenIcon } from '@/components/TokenIcon'
@@ -72,7 +71,7 @@ export default function LimitPage() {
         <div className="min-h-screen bg-white dark:bg-[#0d111c] text-gray-900 dark:text-white flex flex-col">
             <Header />
 
-            <main className="flex-1 flex items-center justify-center px-4 py-20">
+            <main className="flex-1 flex items-center justify-center px-4 pt-24 pb-8">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -200,8 +199,8 @@ export default function LimitPage() {
                                     key={time}
                                     onClick={() => setExpiry(time)}
                                     className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${expiry === time
-                                            ? 'bg-blue-500 text-white'
-                                            : 'bg-gray-100 dark:bg-[#0d111c] text-gray-600 dark:text-[#98a1c0] hover:bg-gray-200 dark:hover:bg-[#293249]'
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-100 dark:bg-[#0d111c] text-gray-600 dark:text-[#98a1c0] hover:bg-gray-200 dark:hover:bg-[#293249]'
                                         }`}
                                 >
                                     {time}
@@ -220,8 +219,6 @@ export default function LimitPage() {
                     </motion.button>
                 </motion.div>
             </main>
-
-            <Footer />
 
             <TokenSelectorModal
                 isOpen={isTokenSelectorOpen}
