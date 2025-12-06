@@ -290,23 +290,9 @@ export function SwapCard() {
             )
         }
 
-        // Check Allowance for ERC20
-        if (sellToken.symbol !== 'ETH') {
-            const currentAllowance = allowance ? allowance as bigint : 0n
-            const amountToSell = parseUnits(sellAmount, 18)
+        // Check Allowance - logic moved to Review Modal
+        // We now allow opening the Review modal even if allowance is low.
 
-            if (currentAllowance < amountToSell) {
-                return (
-                    <button
-                        onClick={handleApprove}
-                        disabled={isWritePending || isConfirming}
-                        className="w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-semibold text-base py-4 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] shadow-lg shadow-blue-500/20"
-                    >
-                        {isWritePending ? 'Approving...' : `Approve ${sellToken.symbol}`}
-                    </button>
-                )
-            }
-        }
 
         return (
             <button
@@ -482,6 +468,9 @@ export function SwapCard() {
                 buyAmount={buyAmount}
                 usdValue={usdValue}
                 details={swapDetails}
+                needsApproval={sellToken.symbol !== 'ETH' && (allowance ? allowance as bigint : 0n) < parseUnits(sellAmount || '0', 18)}
+                onApprove={handleApprove}
+                isApproving={isWritePending || isConfirming}
             />
         </>
     )

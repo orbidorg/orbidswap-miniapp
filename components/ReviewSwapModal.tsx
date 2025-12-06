@@ -22,6 +22,9 @@ interface ReviewSwapModalProps {
         maxSlippage: string
         routing: string
     }
+    needsApproval: boolean
+    onApprove: () => void
+    isApproving: boolean
 }
 
 export function ReviewSwapModal({
@@ -34,7 +37,10 @@ export function ReviewSwapModal({
     sellAmount,
     buyAmount,
     usdValue,
-    details
+    details,
+    needsApproval,
+    onApprove,
+    isApproving
 }: ReviewSwapModalProps) {
     if (!isOpen) return null
 
@@ -108,11 +114,17 @@ export function ReviewSwapModal({
                         </div>
 
                         <button
-                            onClick={onConfirm}
-                            disabled={isPending}
-                            className="w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-semibold text-xl py-4 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg active:scale-[0.98]"
+                            onClick={needsApproval ? onApprove : onConfirm}
+                            disabled={isPending || isApproving}
+                            className={`w-full font-semibold text-xl py-4 rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg active:scale-[0.98] ${needsApproval
+                                    ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                                    : 'bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white'
+                                }`}
                         >
-                            {isPending ? 'Confirming...' : 'Confirm Swap'}
+                            {needsApproval
+                                ? (isApproving ? `Approving ${sellToken.symbol}...` : `Approve ${sellToken.symbol}`)
+                                : (isPending ? 'Confirming...' : 'Confirm Swap')
+                            }
                         </button>
                     </div>
                 </motion.div>
