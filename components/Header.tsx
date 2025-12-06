@@ -27,6 +27,7 @@ export function Header() {
 
     const navLinks = [
         { name: 'Swap', href: '/swap' },
+        { name: 'Limit', href: '/limit' },
         { name: 'Explore', href: '/explore' },
         { name: 'Pool', href: '/pool' },
     ]
