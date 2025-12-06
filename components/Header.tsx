@@ -1,13 +1,14 @@
 'use client'
 
 import { useAccount, useConnect } from 'wagmi'
-import { FiSearch, FiMenu, FiX, FiChevronDown } from 'react-icons/fi'
+import { FiMenu, FiX } from 'react-icons/fi'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { UserWalletPanel } from './UserWalletPanel'
 import { ThemeToggle } from './ThemeToggle'
 import { Spotlight, Magnetic } from './Spotlight'
 import { useMiniKit, WorldAppBadge } from './MiniKitDetector'
+import { MiniKit } from '@worldcoin/minikit-js'
 
 export function Header() {
     const { isConnected } = useAccount()
@@ -15,6 +16,8 @@ export function Header() {
     const { isWorldApp } = useMiniKit()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [scrolled, setScrolled] = useState(false)
+    const [worldWalletAddress, setWorldWalletAddress] = useState<string | null>(null)
+    const [isConnecting, setIsConnecting] = useState(false)
 
     useEffect(() => {
         const handleScroll = () => {
@@ -30,12 +33,70 @@ export function Header() {
         { name: 'Pool', href: '/pool' },
     ]
 
-    const handleConnect = () => {
+    // MiniKit wallet auth for World App
+    const handleWorldAppConnect = async () => {
+        if (!MiniKit.isInstalled()) {
+            console.log('MiniKit not installed')
+            return
+        }
+
+        setIsConnecting(true)
+
+        try {
+            // Get nonce from backend
+            const nonceRes = await fetch('/api/nonce')
+            const { nonce } = await nonceRes.json()
+
+            // Request wallet auth from World App
+            const { finalPayload } = await MiniKit.commandsAsync.walletAuth({
+                nonce,
+                expirationTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                statement: 'Sign in to OrbIdSwap',
+            })
+
+            if (finalPayload.status === 'error') {
+                console.log('Wallet auth cancelled')
+                setIsConnecting(false)
+                return
+            }
+
+            // Verify on backend
+            const verifyRes = await fetch('/api/complete-siwe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payload: finalPayload, nonce }),
+            })
+
+            const result = await verifyRes.json()
+
+            if (result.success) {
+                setWorldWalletAddress(result.address)
+                console.log('Connected:', result.address)
+            }
+        } catch (error) {
+            console.error('Wallet auth error:', error)
+        }
+
+        setIsConnecting(false)
+    }
+
+    // Regular wagmi connect for external browsers
+    const handleRegularConnect = () => {
         const injectedConnector = connectors.find(c => c.id === 'injected') || connectors[0]
         if (injectedConnector) {
             connect({ connector: injectedConnector })
         }
     }
+
+    const handleConnect = () => {
+        if (isWorldApp) {
+            handleWorldAppConnect()
+        } else {
+            handleRegularConnect()
+        }
+    }
+
+    const isWalletConnected = isConnected || worldWalletAddress
 
     return (
         <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass border-b border-gray-200/50 dark:border-[#293249]/50 py-3' : 'bg-transparent py-5'}`}>
@@ -67,28 +128,9 @@ export function Header() {
                     </nav>
                 </div>
 
-                {/* Center: Search (Desktop) - Hide in Mini App for cleaner UI */}
-                {!isWorldApp && (
-                    <div className="hidden md:flex flex-1 max-w-sm mx-8">
-                        <Spotlight className="relative w-full rounded-full" color="rgba(76, 130, 251, 0.2)">
-                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400 dark:text-[#98a1c0] group-focus-within:text-blue-500 transition-colors z-10">
-                                <FiSearch size={16} />
-                            </div>
-                            <input
-                                type="text"
-                                placeholder="Search tokens..."
-                                className="w-full bg-gray-100/50 dark:bg-[#131a2a]/50 border border-transparent hover:border-gray-200 dark:hover:border-[#293249] focus:bg-white dark:focus:bg-[#0d111c] rounded-full py-2 pl-10 pr-4 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-[#98a1c0] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all relative z-10"
-                            />
-                            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none z-10">
-                                <span className="text-[10px] font-mono text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5">/</span>
-                            </div>
-                        </Spotlight>
-                    </div>
-                )}
-
                 {/* Right: Wallet & Mobile Menu */}
                 <div className="flex items-center gap-3">
-                    {/* Hide theme toggle in World App (uses system theme) */}
+                    {/* Hide theme toggle in World App */}
                     {!isWorldApp && <ThemeToggle />}
 
                     {/* Network Indicator */}
@@ -97,15 +139,26 @@ export function Header() {
                         <span className="text-xs font-medium text-gray-600 dark:text-gray-300">World Chain</span>
                     </div>
 
-                    {isConnected ? (
-                        <UserWalletPanel />
+                    {isWalletConnected ? (
+                        worldWalletAddress ? (
+                            // World App wallet display
+                            <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#131a2a] px-3 py-2 rounded-full">
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-500" />
+                                <span className="text-sm font-medium">
+                                    {worldWalletAddress.slice(0, 6)}...{worldWalletAddress.slice(-4)}
+                                </span>
+                            </div>
+                        ) : (
+                            <UserWalletPanel />
+                        )
                     ) : (
                         <Magnetic strength={0.2}>
                             <button
                                 onClick={handleConnect}
-                                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-medium text-sm rounded-full transition-all hover:shadow-lg hover:shadow-blue-500/25 active:scale-95"
+                                disabled={isConnecting}
+                                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 disabled:opacity-50 text-white font-medium text-sm rounded-full transition-all hover:shadow-lg hover:shadow-blue-500/25 active:scale-95"
                             >
-                                {isWorldApp ? 'Connect' : 'Connect Wallet'}
+                                {isConnecting ? 'Connecting...' : (isWorldApp ? 'Connect' : 'Connect Wallet')}
                             </button>
                         </Magnetic>
                     )}
