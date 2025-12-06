@@ -6,7 +6,9 @@ import { RemoveLiquidityModal } from '../../components/RemoveLiquidityModal'
 import { useState, useEffect } from 'react'
 import { useAccount, useReadContract, useReadContracts } from 'wagmi'
 import { formatUnits } from 'viem'
-import { FACTORY_ADDRESS, FACTORY_ABI, PAIR_ABI, ERC20_ABI } from '../../config/contracts'
+import { FACTORY_ADDRESS, FACTORY_ABI, PAIR_ABI } from '../../config/contracts'
+import { motion } from 'framer-motion'
+import { FiPlus, FiDroplet } from 'react-icons/fi'
 
 export default function Pool() {
     const { address, isConnected } = useAccount()
@@ -15,15 +17,12 @@ export default function Pool() {
     const [selectedPair, setSelectedPair] = useState<any>(null)
     const [userPositions, setUserPositions] = useState<any[]>([])
 
-    // 1. Get total pairs length
     const { data: allPairsLength } = useReadContract({
         address: FACTORY_ADDRESS as `0x${string}`,
         abi: FACTORY_ABI,
         functionName: 'allPairsLength',
     })
 
-    // 2. Prepare hooks to fetch first 10 pairs (for demo purposes)
-    // In production, this should be indexed or paginated properly
     const pairsCount = allPairsLength ? Number(allPairsLength) : 0
     const pairsToFetch = Math.min(pairsCount, 10)
     const pairIndexes = Array.from({ length: pairsToFetch }, (_, i) => BigInt(i))
@@ -37,7 +36,6 @@ export default function Pool() {
         }))
     })
 
-    // 3. Fetch data for these pairs
     const { data: pairsData } = useReadContracts({
         contracts: pairAddresses?.flatMap(result => {
             const pairAddress = result.result as unknown as `0x${string}`
@@ -47,62 +45,38 @@ export default function Pool() {
                 { address: pairAddress, abi: PAIR_ABI, functionName: 'token1' },
                 { address: pairAddress, abi: PAIR_ABI, functionName: 'balanceOf', args: [address] },
                 { address: pairAddress, abi: PAIR_ABI, functionName: 'totalSupply' },
-                { address: pairAddress, abi: PAIR_ABI, functionName: 'getReserves' },
             ]
         }) || [],
-        query: {
-            enabled: !!pairAddresses && !!address
-        }
+        query: { enabled: !!pairAddresses && !!address }
     })
-
-    // 4. Fetch Token Symbols (Separate effect to avoid complex nesting in one hook)
-    // We'll do this processing in a useEffect once pairsData is available
-
-    // Helper to fetch token symbol
-    // Note: This is a bit hacky for a pure frontend without indexer. 
-    // Ideally we'd use a multicall for symbols too, but let's process what we have first.
 
     useEffect(() => {
         if (!pairsData || !pairAddresses || !address) return
 
-        const processPositions = async () => {
-            const positions: any[] = []
+        const positions: any[] = []
 
-            // Each pair has 5 calls
-            for (let i = 0; i < pairAddresses.length; i++) {
-                const baseIndex = i * 5
-                const pairAddress = pairAddresses[i].result as unknown as string
-                const token0Address = pairsData[baseIndex]?.result as unknown as string
-                const token1Address = pairsData[baseIndex + 1]?.result as unknown as string
-                const userBalance = pairsData[baseIndex + 2]?.result as bigint
-                const totalSupply = pairsData[baseIndex + 3]?.result as bigint
-                // const reserves = pairsData[baseIndex + 4]?.result
+        for (let i = 0; i < pairAddresses.length; i++) {
+            const baseIndex = i * 4
+            const pairAddress = pairAddresses[i].result as unknown as string
+            const token0Address = pairsData[baseIndex]?.result as unknown as string
+            const token1Address = pairsData[baseIndex + 1]?.result as unknown as string
+            const userBalance = pairsData[baseIndex + 2]?.result as bigint
+            const totalSupply = pairsData[baseIndex + 3]?.result as bigint
 
-                if (userBalance && userBalance > 0n) {
-                    // We found a position! Now we need symbols.
-                    // For now, we'll just use truncated addresses or hardcoded known ones if possible
-                    // In a real app, we'd fetch symbols here or have a token list
+            if (userBalance && userBalance > 0n) {
+                const share = (Number(userBalance) / Number(totalSupply)) * 100
 
-                    // Simple mock for symbols to avoid N+1 requests for now, 
-                    // or we could assume WETH/USDC for demo if addresses match
-
-                    const share = (Number(userBalance) / Number(totalSupply)) * 100
-
-                    positions.push({
-                        pairAddress,
-                        tokenA: { symbol: 'TKN1', address: token0Address }, // Placeholder symbols
-                        tokenB: { symbol: 'TKN2', address: token1Address },
-                        liquidity: formatUnits(userBalance, 18),
-                        share: share.toFixed(2) + '%'
-                    })
-                }
+                positions.push({
+                    pairAddress,
+                    tokenA: { symbol: 'TKN1', address: token0Address },
+                    tokenB: { symbol: 'TKN2', address: token1Address },
+                    liquidity: formatUnits(userBalance, 18),
+                    share: share.toFixed(2) + '%'
+                })
             }
-            setUserPositions(positions)
         }
-
-        processPositions()
+        setUserPositions(positions)
     }, [pairsData, pairAddresses, address])
-
 
     const handleRemoveClick = (position: any) => {
         setSelectedPair(position)
@@ -110,58 +84,82 @@ export default function Pool() {
     }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-[#0d111c] text-gray-900 dark:text-white font-sans selection:bg-black dark:selection:bg-[#4c82fb] selection:text-white">
+        <div className="min-h-screen bg-white dark:bg-[#0d111c] text-gray-900 dark:text-white font-sans">
             <Header />
-            <main className="flex flex-col items-center justify-center p-4 mt-20">
-                <div className="w-full max-w-2xl">
-                    <div className="flex justify-between items-center mb-8">
-                        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Pools</h1>
+            <main className="p-4 pt-20 pb-8">
+                <div className="max-w-md mx-auto">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-4">
+                        <h1 className="text-2xl font-bold">Your Pools</h1>
                         <button
                             onClick={() => setIsAddLiquidityOpen(true)}
-                            className="bg-black dark:bg-[#4c82fb] hover:bg-gray-800 dark:hover:bg-[#3b66c9] text-white font-semibold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-black/10 dark:shadow-blue-500/20"
+                            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white font-semibold px-4 py-2.5 rounded-xl"
                         >
-                            + New Position
+                            <FiPlus size={18} />
+                            Add
                         </button>
                     </div>
 
                     {!isConnected ? (
-                        <div className="bg-white dark:bg-[#131a2a] rounded-3xl p-8 border border-gray-200 dark:border-[#293249] text-center shadow-sm dark:shadow-none">
-                            <p className="text-gray-500 dark:text-[#98a1c0] text-lg">Connect your wallet to view your liquidity positions.</p>
-                        </div>
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gray-50 dark:bg-[#131a2a] rounded-2xl p-8 text-center"
+                        >
+                            <FiDroplet className="mx-auto text-gray-300 dark:text-[#293249] mb-4" size={48} />
+                            <p className="text-gray-500 dark:text-[#5d6785]">Connect wallet to view positions</p>
+                        </motion.div>
                     ) : userPositions.length === 0 ? (
-                        <div className="bg-white dark:bg-[#131a2a] rounded-3xl p-8 border border-gray-200 dark:border-[#293249] text-center shadow-sm dark:shadow-none">
-                            <p className="text-gray-500 dark:text-[#98a1c0] text-lg">No active liquidity positions found.</p>
-                            <p className="text-gray-400 dark:text-[#5d6785] text-sm mt-2">Scanning first {pairsToFetch} pairs...</p>
-                        </div>
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gray-50 dark:bg-[#131a2a] rounded-2xl p-8 text-center"
+                        >
+                            <FiDroplet className="mx-auto text-gray-300 dark:text-[#293249] mb-4" size={48} />
+                            <p className="text-gray-500 dark:text-[#5d6785]">No active positions</p>
+                            <p className="text-xs text-gray-400 mt-2">Add liquidity to earn fees</p>
+                        </motion.div>
                     ) : (
-                        <div className="grid gap-4">
+                        <div className="space-y-3">
                             {userPositions.map((pos, i) => (
-                                <div key={i} className="bg-white dark:bg-[#131a2a] rounded-3xl p-6 border border-gray-200 dark:border-[#293249] hover:border-black dark:hover:border-[#4c82fb] transition-colors shadow-sm dark:shadow-none">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <div className="flex items-center gap-2">
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: i * 0.05 }}
+                                    className="bg-gray-50 dark:bg-[#131a2a] rounded-2xl p-4"
+                                >
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div className="flex items-center gap-3">
                                             <div className="flex -space-x-2">
-                                                <div className="w-8 h-8 rounded-full bg-blue-500 border-2 border-white dark:border-[#131a2a]"></div>
-                                                <div className="w-8 h-8 rounded-full bg-purple-500 border-2 border-white dark:border-[#131a2a]"></div>
+                                                <div className="w-8 h-8 rounded-full bg-blue-500 border-2 border-white dark:border-[#131a2a]" />
+                                                <div className="w-8 h-8 rounded-full bg-purple-500 border-2 border-white dark:border-[#131a2a]" />
                                             </div>
-                                            <span className="font-bold text-lg text-gray-900 dark:text-white">LP Token</span>
-                                            <span className="text-sm text-gray-500 dark:text-[#98a1c0] bg-gray-100 dark:bg-[#0d111c] px-2 py-1 rounded-lg">{pos.pairAddress.slice(0, 6)}...{pos.pairAddress.slice(-4)}</span>
+                                            <div>
+                                                <div className="font-semibold">LP Position</div>
+                                                <div className="text-xs text-gray-400">
+                                                    {pos.pairAddress.slice(0, 6)}...{pos.pairAddress.slice(-4)}
+                                                </div>
+                                            </div>
                                         </div>
                                         <button
                                             onClick={() => handleRemoveClick(pos)}
-                                            className="text-black dark:text-[#4c82fb] font-medium hover:text-gray-700 dark:hover:text-[#3b66c9] transition-colors"
+                                            className="text-blue-500 font-medium text-sm"
                                         >
                                             Manage
                                         </button>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500 dark:text-[#98a1c0]">Your Liquidity</span>
-                                        <span className="text-gray-900 dark:text-white font-medium">{parseFloat(pos.liquidity).toFixed(4)} LP</span>
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div className="bg-white dark:bg-[#0d111c] rounded-xl p-3">
+                                            <div className="text-xs text-gray-400 mb-1">Liquidity</div>
+                                            <div className="font-semibold">{parseFloat(pos.liquidity).toFixed(4)}</div>
+                                        </div>
+                                        <div className="bg-white dark:bg-[#0d111c] rounded-xl p-3">
+                                            <div className="text-xs text-gray-400 mb-1">Share</div>
+                                            <div className="font-semibold">{pos.share}</div>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between text-sm mt-1">
-                                        <span className="text-gray-500 dark:text-[#98a1c0]">Share of Pool</span>
-                                        <span className="text-gray-900 dark:text-white font-medium">{pos.share}</span>
-                                    </div>
-                                </div>
+                                </motion.div>
                             ))}
                         </div>
                     )}
