@@ -408,6 +408,7 @@ export function SwapCard() {
                 isOpen={isTokenSelectorOpen}
                 onClose={() => setIsTokenSelectorOpen(false)}
                 onSelect={handleTokenSelect}
+                excludeToken={selectorMode === 'sell' ? buyToken?.symbol : sellToken.symbol}
             />
 
             <SettingsModal

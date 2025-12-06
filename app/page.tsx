@@ -189,9 +189,9 @@ export default function LandingPage() {
         <div className="mt-8 text-xs text-gray-400 dark:text-[#5d6785] flex items-center justify-center gap-2">
           Built for World Chain
           <img
-            src="https://world.org/favicon.svg"
+            src="https://s2.coinmarketcap.com/static/img/coins/64x64/13502.png"
             alt="World"
-            className="w-4 h-4"
+            className="w-4 h-4 rounded-full"
           />
         </div>
       </main>

@@ -9,6 +9,7 @@ interface TokenSelectorModalProps {
     isOpen: boolean
     onClose: () => void
     onSelect: (token: any) => void
+    excludeToken?: string // Token symbol to exclude (already selected)
 }
 
 const COMMON_TOKENS = [
@@ -18,8 +19,20 @@ const COMMON_TOKENS = [
     { symbol: 'USDT', name: 'Tether USD', address: '0x...' },
 ]
 
-export function TokenSelectorModal({ isOpen, onClose, onSelect }: TokenSelectorModalProps) {
+export function TokenSelectorModal({ isOpen, onClose, onSelect, excludeToken }: TokenSelectorModalProps) {
     const [searchQuery, setSearchQuery] = useState('')
+
+    // Filter tokens based on search and exclude already selected token
+    const filteredTokens = COMMON_TOKENS.filter(token => {
+        // Exclude already selected token
+        if (excludeToken && token.symbol === excludeToken) return false
+        // Filter by search query
+        if (searchQuery) {
+            return token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+        }
+        return true
+    })
 
     return (
         <AnimatePresence>
@@ -56,7 +69,7 @@ export function TokenSelectorModal({ isOpen, onClose, onSelect }: TokenSelectorM
 
                             {/* Quick select tokens */}
                             <div className="flex flex-wrap gap-2 mb-4">
-                                {COMMON_TOKENS.map((token) => (
+                                {filteredTokens.slice(0, 4).map((token) => (
                                     <button
                                         key={token.symbol}
                                         onClick={() => {
@@ -73,9 +86,9 @@ export function TokenSelectorModal({ isOpen, onClose, onSelect }: TokenSelectorM
 
                             {/* Token list */}
                             <div className="border-t border-gray-200 dark:border-[#293249] pt-4">
-                                <div className="text-gray-500 dark:text-[#98a1c0] text-sm mb-2">Popular tokens</div>
+                                <div className="text-gray-500 dark:text-[#98a1c0] text-sm mb-2">Available tokens</div>
                                 <div className="flex flex-col gap-1">
-                                    {COMMON_TOKENS.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()) || t.symbol.toLowerCase().includes(searchQuery.toLowerCase())).map((token) => (
+                                    {filteredTokens.map((token) => (
                                         <button
                                             key={token.symbol}
                                             onClick={() => {
@@ -94,6 +107,9 @@ export function TokenSelectorModal({ isOpen, onClose, onSelect }: TokenSelectorM
                                             <div className="text-gray-900 dark:text-white text-sm">0</div>
                                         </button>
                                     ))}
+                                    {filteredTokens.length === 0 && (
+                                        <div className="text-center text-gray-400 py-4">No tokens found</div>
+                                    )}
                                 </div>
                             </div>
                         </div>
